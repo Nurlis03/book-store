@@ -8,12 +8,11 @@ import lombok.Setter;
 @Builder
 @Setter
 @Getter
-public class BookCreateDto {
+public class BookCreateRequestDto {
     private String author;
-
-    private int pages;
-
-    private double cost;
-
+    private String title;
+    private Long pages;
+    private Double cost;
     private Binding binding;
+    private Long libraryId;
 }

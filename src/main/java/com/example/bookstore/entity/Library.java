@@ -7,15 +7,16 @@ import javax.persistence.*;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Setter
-@Getter
 @Where(clause = "deleted_at IS NULL")
-public class Book implements Serializable {
+public class Library implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -26,27 +27,16 @@ public class Book implements Serializable {
 
     private String title;
 
-    private String author;
+    private String address;
 
-    private Long pages;
+    @OneToMany(
+            mappedBy = "library",
+            cascade = {
+                    CascadeType.PERSIST
+            }
+    )
+    private List<Book> books;
 
-    private Double cost;
-
-    @Enumerated(EnumType.STRING)
-    private Binding binding;
-
-    @Enumerated(EnumType.STRING)
-    private BookStatus bookStatus;
-
-    @ManyToOne
-    @JoinColumn(name = "library_id")
-    private Library library;
-
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
-
-    @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
     @ManyToOne

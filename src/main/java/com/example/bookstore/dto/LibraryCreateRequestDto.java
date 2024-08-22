@@ -5,6 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class BookUpdateDto {
-    private String author;
+public class LibraryCreateRequestDto {
+    private String title;
+    private String address;
 }
