@@ -8,6 +8,7 @@ import com.example.bookstore.dto.BookUpdateRequestDto;
 import com.example.bookstore.entity.*;
 import com.example.bookstore.exception.BookNotFoundException;
 import com.example.bookstore.mapper.BookMapper;
+import com.example.bookstore.mapper.impl.BookMapperImpl;
 import com.example.bookstore.repository.BookRepository;
 import com.example.bookstore.repository.LibraryRepository;
 import com.querydsl.core.BooleanBuilder;

@@ -7,7 +7,6 @@ import com.example.bookstore.dto.SignUpRequestDto;
 import com.example.bookstore.entity.User;
 import com.example.bookstore.exception.UserAlreadyExistsException;
 import com.example.bookstore.mapper.AuthenticationMapper;
-import com.example.bookstore.mapper.impl.DefaultAuthenticationMapper;
 import com.example.bookstore.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,14 +22,14 @@ public class AuthenticationService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-    private final AuthenticationMapper defaultAuthenticationMapper;
+    private final AuthenticationMapper authenticationMapper;
 
     public AuthenticationResponse signUp(SignUpRequestDto signUpRequestDto) {
         log.info(signUpRequestDto.toString());
         if (userRepository.existsByEmail(signUpRequestDto.getEmail())) {
             throw new UserAlreadyExistsException(signUpRequestDto.getEmail());
         }
-        User user = defaultAuthenticationMapper.fromSignUpRequestDtoToUser(signUpRequestDto);
+        User user = authenticationMapper.fromSignUpRequestDtoToUser(signUpRequestDto);
         userRepository.save(user);
         String accessToken = jwtService.generateToken(user.getEmail());
         return AuthenticationResponse

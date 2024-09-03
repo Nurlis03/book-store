@@ -1,4 +1,4 @@
-CREATE TABLE book (
+CREATE TABLE IF NOT EXISTS public.book (
     id SERIAL PRIMARY KEY,
     author VARCHAR(255) NOT NULL,
     pages INTEGER NOT NULL,
