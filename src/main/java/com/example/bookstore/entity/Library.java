@@ -1,29 +1,25 @@
 package com.example.bookstore.entity;
 
+import com.example.bookstore.entity.base.SoftDeletable;
 import lombok.*;
 import org.hibernate.annotations.Where;
+import org.hibernate.envers.AuditTable;
+import org.hibernate.envers.Audited;
 
-import javax.persistence.*;
-import java.io.Serial;
-import java.io.Serializable;
-import java.time.LocalDateTime;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.OneToMany;
 import java.util.List;
 
 @Entity
 @Getter
 @Setter
 @Builder
+@Audited
 @NoArgsConstructor
 @AllArgsConstructor
 @Where(clause = "deleted_at IS NULL")
-public class Library implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Library extends SoftDeletable {
 
     private String title;
 
@@ -36,10 +32,4 @@ public class Library implements Serializable {
             }
     )
     private List<Book> books;
-
-    private LocalDateTime deletedAt;
-
-    @ManyToOne
-    @JoinColumn(name = "deleted_by")
-    private User deletedBy;
 }

@@ -20,8 +20,8 @@ import java.util.Objects;
 @AllArgsConstructor
 public class JwtTokenFilter extends OncePerRequestFilter {
 
-    private JwtService jwtService;
-    private CustomUserDetailsService customUserDetailsService;
+    private final JwtService jwtService;
+    private final CustomUserDetailsService customUserDetailsService;
 
     @Override
     protected void doFilterInternal(

@@ -1,6 +1,6 @@
 package com.example.bookstore.repository;
 
-import com.example.bookstore.entity.Binding;
+import com.example.bookstore.entity.enums.Binding;
 import com.example.bookstore.entity.Book;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

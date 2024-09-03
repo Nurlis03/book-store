@@ -29,7 +29,7 @@ public class JwtService {
     @Value("${security.jwt.token.expire-length}")
     private Long validityInMilliseconds;
 
-    private CustomUserDetailsService customUserDetailsService;
+    private final CustomUserDetailsService customUserDetailsService;
 
     @PostConstruct
     protected void init() {

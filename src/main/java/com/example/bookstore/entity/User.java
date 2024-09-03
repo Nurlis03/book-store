@@ -1,9 +1,10 @@
 package com.example.bookstore.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.example.bookstore.entity.base.SoftDeletable;
+import lombok.*;
+import org.hibernate.annotations.Where;
+import org.hibernate.envers.AuditTable;
+import org.hibernate.envers.Audited;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,15 +15,14 @@ import java.util.List;
 
 @Entity
 @Builder
-@Data
 @Table(name = "_user")
 @NoArgsConstructor
 @AllArgsConstructor
-public class User implements UserDetails {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@Getter
+@Setter
+@Audited
+@Where(clause = "deleted_at IS NULL")
+public class User extends SoftDeletable implements UserDetails {
 
     private String firstName;
 
@@ -35,9 +35,6 @@ public class User implements UserDetails {
 
     @Enumerated(EnumType.STRING)
     private Role role;
-
-    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
-    private List<Book> books;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

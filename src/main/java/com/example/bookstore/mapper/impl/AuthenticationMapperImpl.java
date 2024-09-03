@@ -9,9 +9,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 @AllArgsConstructor
-public class DefaultAuthenticationMapper implements AuthenticationMapper {
+public class AuthenticationMapperImpl implements AuthenticationMapper {
 
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public User fromSignUpRequestDtoToUser(SignUpRequestDto signUpRequestDto) {

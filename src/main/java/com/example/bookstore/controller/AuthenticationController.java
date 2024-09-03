@@ -4,6 +4,7 @@ import com.example.bookstore.dto.AuthenticationResponse;
 import com.example.bookstore.dto.SignInRequestDto;
 import com.example.bookstore.dto.SignUpRequestDto;
 import com.example.bookstore.service.AuthenticationService;
+import com.example.bookstore.service.impl.AuthenticationServiceImpl;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/auth")
 @AllArgsConstructor
 public class AuthenticationController {
-    private AuthenticationService authenticationService;
+    private final AuthenticationService authenticationService;
 
     @PostMapping("/sign-up")
     public AuthenticationResponse signUp(@RequestBody SignUpRequestDto signUpRequestDto) {

@@ -4,7 +4,7 @@ import com.example.bookstore.dto.BookCreateRequestDto;
 import com.example.bookstore.dto.BookPageResponseDto;
 import com.example.bookstore.dto.BookResponseDto;
 import com.example.bookstore.dto.BookUpdateRequestDto;
-import com.example.bookstore.entity.Binding;
+import com.example.bookstore.entity.enums.Binding;
 import com.example.bookstore.entity.User;
 import com.example.bookstore.service.BookService;
 import lombok.AllArgsConstructor;
@@ -18,7 +18,7 @@ import java.util.Map;
 @RequestMapping("api/v1")
 @AllArgsConstructor
 public class BookController {
-    private BookService bookService;
+    private final BookService bookService;
 
     @GetMapping("/books")
     public List<BookResponseDto> getAllBooks() {
@@ -31,13 +31,13 @@ public class BookController {
     }
 
     @PostMapping("/books")
-    public BookResponseDto createBook(@RequestBody BookCreateRequestDto bookCreateDto) {
-        return bookService.createBook(bookCreateDto);
+    public BookResponseDto createBook(@AuthenticationPrincipal User user, @RequestBody BookCreateRequestDto bookCreateDto) {
+        return bookService.createBook(user, bookCreateDto);
     }
 
     @PutMapping("/books")
-    public BookResponseDto updateBook(@RequestBody BookUpdateRequestDto bookUpdateDto) {
-        return bookService.updateBook(bookUpdateDto);
+    public BookResponseDto updateBook(@AuthenticationPrincipal User user, @RequestBody BookUpdateRequestDto bookUpdateDto) {
+        return bookService.updateBook(user, bookUpdateDto);
     }
 
     @DeleteMapping("/books/{id}")
@@ -111,16 +111,17 @@ public class BookController {
         return bookService.searchBooks(author, minPages, maxCost, binding, libraryId, page, size, sortBy, sortOrder);
     }
 
-    @PostMapping("/books/retrieve/{id}")
-    public BookResponseDto retrieveBookFromLibrary(
+    @PostMapping("/books/receive/{id}")
+    public BookResponseDto receiveBookFromLibrary(
             @AuthenticationPrincipal User user,
             @PathVariable("id") Long bookId) {
-        return bookService.retrieveBookFromLibrary(user, bookId);
+        return bookService.receiveBookFromLibrary(user, bookId);
     }
 
     @PostMapping("/books/return/{id}")
     public BookResponseDto returnBookToLibrary(
+            @AuthenticationPrincipal User user,
             @PathVariable("id") Long bookId) {
-        return bookService.returnBookToLibrary(bookId);
+        return bookService.returnBookToLibrary(user, bookId);
     }
 }

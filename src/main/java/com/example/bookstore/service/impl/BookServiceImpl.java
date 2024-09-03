@@ -1,4 +1,4 @@
-package com.example.bookstore.service;
+package com.example.bookstore.service.impl;
 
 import com.example.bookstore.book.QBook;
 import com.example.bookstore.dto.BookCreateRequestDto;
@@ -6,11 +6,16 @@ import com.example.bookstore.dto.BookPageResponseDto;
 import com.example.bookstore.dto.BookResponseDto;
 import com.example.bookstore.dto.BookUpdateRequestDto;
 import com.example.bookstore.entity.*;
+import com.example.bookstore.entity.enums.ActionType;
+import com.example.bookstore.entity.enums.Binding;
+import com.example.bookstore.entity.enums.BookStatus;
 import com.example.bookstore.exception.BookNotFoundException;
+import com.example.bookstore.exception.LibraryNotFoundException;
 import com.example.bookstore.mapper.BookMapper;
-import com.example.bookstore.mapper.impl.BookMapperImpl;
+import com.example.bookstore.repository.BookHistoryRepository;
 import com.example.bookstore.repository.BookRepository;
 import com.example.bookstore.repository.LibraryRepository;
+import com.example.bookstore.service.BookService;
 import com.querydsl.core.BooleanBuilder;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,35 +27,48 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
-public class BookService {
-    private BookRepository bookRepository;
-    private LibraryRepository libraryRepository;
-    private BookMapper bookMapper;
+public class BookServiceImpl implements BookService {
+    private final BookRepository bookRepository;
+    private final LibraryRepository libraryRepository;
+    private final BookMapper bookMapper;
+    private final BookHistoryRepository bookHistoryRepository;
 
+    @Override
     public List<BookResponseDto> getAllBooks() {
         return bookMapper.fromBookToBookResponseDto(bookRepository.findAll());
     }
 
+    @Override
     public BookResponseDto findBookById(Long bookId) {
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new BookNotFoundException(bookId));
         return bookMapper.fromBookToBookResponseDto(book);
     }
 
-    public BookResponseDto createBook(BookCreateRequestDto bookDto) {
+    @Override
+    public BookResponseDto createBook(User user, BookCreateRequestDto bookDto) {
         Library library = libraryRepository.findById(bookDto.getLibraryId())
-                .orElseThrow(() -> new BookNotFoundException(bookDto.getLibraryId()));
+                .orElseThrow(() -> new LibraryNotFoundException(bookDto.getLibraryId()));
 
         Book newBook = bookMapper.fromBookCreateRequestDtoToBook(bookDto, library);
+
+        BookHistory bookHistory = BookHistory
+                                        .builder()
+                                        .actionDate(LocalDateTime.now())
+                                        .actionType(ActionType.ADD)
+                                        .performedByUser(user)
+                                        .book(newBook)
+                                        .build();
         bookRepository.save(newBook);
+        bookHistoryRepository.save(bookHistory);
         return bookMapper.fromBookToBookResponseDto(newBook);
     }
 
-    public BookResponseDto updateBook(BookUpdateRequestDto bookUpdateDto) {
+    @Override
+    public BookResponseDto updateBook(User user, BookUpdateRequestDto bookUpdateDto) {
         Book book = bookRepository.findById(bookUpdateDto.getBookId())
                 .orElseThrow(() -> new BookNotFoundException(bookUpdateDto.getBookId()));
 
@@ -60,111 +78,125 @@ public class BookService {
         book.setCost(bookUpdateDto.getCost());
         book.setBinding(bookUpdateDto.getBinding());
 
+        BookHistory bookHistory = BookHistory
+                .builder()
+                .actionDate(LocalDateTime.now())
+                .actionType(ActionType.MOD)
+                .book(book)
+                .performedByUser(user)
+                .build();
+
         bookRepository.save(book);
+        bookHistoryRepository.save(bookHistory);
         return bookMapper.fromBookToBookResponseDto(book);
     }
 
+    @Override
     public Map<String, String> deleteBookById(User user, Long bookId) {
         Book deletedBook = bookRepository.findById(bookId)
                 .orElseThrow(() -> new BookNotFoundException(bookId));
 
         deletedBook.setDeletedBy(user);
         deletedBook.setDeletedAt(LocalDateTime.now());
+
+        BookHistory bookHistory = BookHistory
+                .builder()
+                .actionDate(LocalDateTime.now())
+                .actionType(ActionType.DEL)
+                .book(deletedBook)
+                .performedByUser(user)
+                .build();
+
         bookRepository.save(deletedBook);
+        bookHistoryRepository.save(bookHistory);
         return Map.of("message", "Deletion of book with ID=" + bookId + " was successful.");
     }
 
+    @Override
     public BookPageResponseDto findByAuthorContaining(String authorSubstring, int page, int size, String sortBy, String sortOrder) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortOrder), sortBy));
 
         Page<Book> bookPage = bookRepository.findByAuthorContaining(authorSubstring, pageable);
 
-        return fromBookPageToBooksResponseList(pageable, bookPage);
+        return bookMapper.fromBookPageToBookPageResponseDto(pageable, bookPage);
     }
 
+    @Override
     public BookPageResponseDto findByPagesGreaterThan(Long minPages, int page, int size, String sortBy, String sortOrder) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortOrder), sortBy));
 
         Page<Book> bookPage = bookRepository.findByPagesGreaterThan(minPages, pageable);
 
-        return fromBookPageToBooksResponseList(pageable, bookPage);
+        return bookMapper.fromBookPageToBookPageResponseDto(pageable, bookPage);
     }
 
+    @Override
     public BookPageResponseDto findByCostLessThan(Double maxCost, int page, int size, String sortBy, String sortOrder) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortOrder), sortBy));
 
         Page<Book> bookPage = bookRepository.findByCostLessThan(maxCost, pageable);
 
-        return fromBookPageToBooksResponseList(pageable, bookPage);
+        return bookMapper.fromBookPageToBookPageResponseDto(pageable, bookPage);
     }
 
+    @Override
     public BookPageResponseDto findByBinding(Binding binding, int page, int size, String sortBy, String sortOrder) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortOrder), sortBy));
         Page<Book> bookPage = bookRepository.findByBinding(binding, pageable);
 
-        return fromBookPageToBooksResponseList(pageable, bookPage);
+        return bookMapper.fromBookPageToBookPageResponseDto(pageable, bookPage);
     }
 
+    @Override
     public BookPageResponseDto findByLibraryId(Long libraryId, int page, int size, String sortBy, String sortOrder) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortOrder), sortBy));
         Page<Book> bookPage = bookRepository.findByLibraryId(libraryId, pageable);
 
-        return fromBookPageToBooksResponseList(pageable, bookPage);
+        return bookMapper.fromBookPageToBookPageResponseDto(pageable, bookPage);
     }
 
-    public BookResponseDto retrieveBookFromLibrary(User user, Long bookId) {
+    @Override
+    public BookResponseDto receiveBookFromLibrary(User user, Long bookId) {
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new BookNotFoundException(bookId));
         book.setBookStatus(BookStatus.BORROWED);
-        book.setUser(user);
+        book.setReceivedByUser(user);
+
+        BookHistory bookHistory = BookHistory
+                .builder()
+                .actionDate(LocalDateTime.now())
+                .actionType(ActionType.RECEIVED)
+                .book(book)
+                .performedByUser(user)
+                .build();
+
         bookRepository.save(book);
+        bookHistoryRepository.save(bookHistory);
         return bookMapper.fromBookToBookResponseDto(book);
     }
 
-    public BookResponseDto returnBookToLibrary(Long bookId) {
+    @Override
+    public BookResponseDto returnBookToLibrary(User user, Long bookId) {
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new BookNotFoundException(bookId));
+
         book.setBookStatus(BookStatus.AVAILABLE);
-        book.setUser(null);
+        book.setReceivedByUser(null);
+
+        BookHistory bookHistory = BookHistory
+                .builder()
+                .actionDate(LocalDateTime.now())
+                .actionType(ActionType.RETURNED)
+                .book(book)
+                .performedByUser(user)
+                .build();
+
         bookRepository.save(book);
+        bookHistoryRepository.save(bookHistory);
         return bookMapper.fromBookToBookResponseDto(book);
     }
 
-    private BookPageResponseDto fromBookPageToBooksResponseList(Pageable pageable, Page<Book> bookPage) {
-//        Integer result = doSmth(
-//                (arg) -> arg++,
-//                1
-//        );
-
-        List<BookResponseDto> bookResponseDtoList = bookPage.getContent()
-                .stream()
-                .map(bookMapper::fromBookToBookResponseDto)
-                .collect(Collectors.toList());
-
-        Integer nextPage = null;
-        Integer previousPage = null;
-
-        if (bookPage.hasNext()) {
-            nextPage = bookPage.nextPageable().getPageNumber();
-        }
-        if (bookPage.hasPrevious()) {
-            previousPage = bookPage.previousPageable().getPageNumber();
-        }
-        return BookPageResponseDto
-                .builder()
-                .books(bookResponseDtoList)
-                .totalRecords(bookPage.getTotalElements())
-                .currentPage(bookPage.getNumber())
-                .totalPages(bookPage.getTotalPages())
-                .nextPage(nextPage)
-                .prevPage(previousPage)
-                .build();
-    }
-
-    //    private Integer doSmth(MyLambda lambda, Integer a) {
-//        return lambda.execute(a);
-//    }
-
+    @Override
     public BookPageResponseDto searchBooks(String author, Long minPages,
                                              Double maxCost, Binding binding,
                                              Long libraryId, int page,
@@ -192,6 +224,6 @@ public class BookService {
         }
 
         Page<Book> bookPage = bookRepository.findAll(builder, pageable);
-        return fromBookPageToBooksResponseList(pageable, bookPage);
+        return bookMapper.fromBookPageToBookPageResponseDto(pageable, bookPage);
     }
 }

@@ -1,7 +1,7 @@
 package com.example.bookstore.dto;
 
-import com.example.bookstore.entity.Binding;
-import com.example.bookstore.entity.BookStatus;
+import com.example.bookstore.entity.enums.Binding;
+import com.example.bookstore.entity.enums.BookStatus;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;

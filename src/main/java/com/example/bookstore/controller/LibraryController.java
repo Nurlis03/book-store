@@ -5,9 +5,9 @@ import com.example.bookstore.dto.LibraryResponseDto;
 import com.example.bookstore.dto.LibraryUpdateRequestDto;
 import com.example.bookstore.entity.User;
 import com.example.bookstore.service.LibraryService;
+import com.example.bookstore.service.impl.LibraryServiceImpl;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,7 +17,7 @@ import java.util.Map;
 @RequestMapping("api/v1")
 @AllArgsConstructor
 public class LibraryController {
-    private LibraryService libraryService;
+    private final LibraryService libraryService;
 
     @GetMapping("/libraries")
     public List<LibraryResponseDto> getAllLibraries() {
